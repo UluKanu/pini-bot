@@ -334,6 +334,7 @@ def main():
         logging.info("SUCCESS! CSV file created:")
         logging.info(f"  {combined_file}")
         logging.info("=" * 60)
+        logging.info("8=>")
 
     except Exception as e:
         logging.error(f"\n❌ Error: {e}")
