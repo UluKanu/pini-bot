@@ -220,7 +220,7 @@ def get_overnight_data(df):
         'ONL': ONL
     }
 
-def create_combined_csv(rth_data, overnight_data, previous_rth_data, filename='combined.csv', symbol='ESH6.CME@BMD'):
+def create_combined_csv(rth_data, overnight_data, previous_rth_data, filename='combined.csv', symbol='ESM6.CME@BMD'):
     """
     Create a combined CSV file for both RTH and overnight notes
     """
@@ -288,7 +288,7 @@ def main():
     """
     parser = argparse.ArgumentParser(description="Futures Custom Notes Generator")
     parser.add_argument("--symbol", type=str, default="ES=F", help="Futures symbol to fetch data for")
-    parser.add_argument("--bm_symbol", type=str, default="ESH6.CME@BMD", help="Bookmap symbol name")
+    parser.add_argument("--bm_symbol", type=str, default="ESM6.CME@BMD", help="Bookmap symbol name")
     parser.add_argument("--combined_filename", type=str, default="combined.csv", help="Filename for combined notes CSV")
 
     args = parser.parse_args()
