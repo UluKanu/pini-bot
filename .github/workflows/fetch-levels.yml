@@ -1,0 +1,50 @@
+name: Fetch levels
+
+  on:
+    schedule:
+      - cron: '*/5 * * * *'
+    workflow_dispatch:
+
+  jobs:
+    fetch:
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: false
+        matrix:
+          include:
+            - symbol: ES=F
+              bm_symbol: ESM6.CME@BMD
+              outfile: ES.csv
+            - symbol: MES=F
+              bm_symbol: MESM6.CME@BMD
+              outfile: MES.csv
+      steps:
+        - uses: actions/checkout@v4
+
+        - uses: actions/setup-python@v5
+          with:
+            python-version: '3.11'
+
+        - name: Install deps
+          run: |
+            pip install -r requirements.txt
+            pip install awscli
+
+        - name: Fetch levels
+          run: |
+            python fetch_levels.py \
+              --symbol "${{ matrix.symbol }}" \
+              --bm_symbol "${{ matrix.bm_symbol }}" \
+              --combined_filename "${{ matrix.outfile }}"
+
+        - name: Upload to R2
+          env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+            AWS_DEFAULT_REGION: auto
+          run: |
+            aws s3 cp "${{ matrix.outfile }}" \
+              "s3://${{ secrets.R2_BUCKET }}/${{ matrix.outfile }}" \
+              --endpoint-url "https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com" \
+              --content-type "text/csv" \
+              --cache-control "max-age=60"
