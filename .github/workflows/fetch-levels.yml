@@ -13,10 +13,10 @@ jobs:
       matrix:
         include:
           - symbol: ES=F
-            bm_symbol: ESM6.CME@BMD
+            bm_symbol: ESU6.CME@BMD
             outfile: ES.csv
           - symbol: MES=F
-            bm_symbol: MESM6.CME@BMD
+            bm_symbol: MESU6.CME@BMD
             outfile: MES.csv
     steps:
       - uses: actions/checkout@v4
