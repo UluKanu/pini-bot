@@ -1,0 +1,52 @@
+name: Heartbeat
+
+# WHY THIS EXISTS
+#
+# GitHub disables scheduled workflows after 60 days with no repository ACTIVITY.
+# Workflow runs do not count — only commits do. This repo's whole job is to run a cron,
+# so it has no reason to ever be touched, and it starves its own schedule out.
+#
+# That is not hypothetical here. It already happened:
+#   last commit  2026-06-15  (roll to the Sep contract)
+#   disabled     2026-08-14  (exactly 60 days later, state: disabled_inactivity)
+#   consequence  ES.csv / MES.csv served 17-day-old levels into Bookmap while still
+#                returning HTTP 200 with a perfectly valid-looking file
+#
+# Nothing alerted anyone, because nothing was broken — the file was fine, the clock had
+# just stopped. Silent by construction, and the levels were being traded on.
+#
+# Monthly commit keeps the window open; the re-assert covers the case where it slipped
+# anyway.
+
+on:
+  schedule:
+    - cron: '23 6 1 * *'   # 06:23 UTC on the 1st of each month
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  beat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Touch the heartbeat file and commit
+        run: |
+          date -u +"%Y-%m-%dT%H:%M:%SZ" > .heartbeat
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .heartbeat
+          git commit -m "heartbeat: keep the schedule alive (see heartbeat.yml)" || exit 0
+          git push
+
+      - name: Re-assert the levels schedule
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api -X PUT \
+            "repos/${{ github.repository }}/actions/workflows/fetch-levels.yml/enable" \
+            && echo "fetch-levels.yml enabled" \
+            || echo "enable call failed (already active is fine)"
